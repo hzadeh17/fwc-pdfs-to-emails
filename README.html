@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Process Documentation</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="process-documentation">Process Documentation</h1>
+<p>This document provides an overview of the process to convert <strong>PDF documents</strong> of emails released after the Flint Water Crisis into a <strong>searchable database</strong> of emails. The programming language used is Python. Files can be downloaded here: GITHUB LINK.</p>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ol>
+<li><a href="#early-process">Early Process</a></li>
+<li><a href="#preparing-pdfs">Preparing PDFs</a></li>
+<li><a href="#making-the-database">Making the database</a></li>
+<li><a href="#reading-the-output">Read the output</a></li>
+</ol>
+<h1 id="early-process">Early process</h1>
+<h2 id="the-problem-400000-pdfs">The problem: 400,000+ PDFs</h2>
+<div style="float: right"><img src="file:////Users/hzadeh/Library/CloudStorage/OneDrive-UniversityofIowa/projects/FEL/code/fwc-emails-to-pdfs/img/michwebsite.png" width="150" alt="alttext"></div>
+<p>bla bla bl abla bla blabla bla blabla bla blabla bla blabla bla blabla bla bla Some of them were blurry bla bla bla bla bl abla bla blabla bla blabla bla blabla bla blabla bla blabla bla bla Some of them were blurry bla bla bla bla bl abla bla blabla bla blabla bla blabla bla blabla bla blabla bla bla Some of them were blurry bla bla</p>
+<div ><img src="file:////Users/hzadeh/Library/CloudStorage/OneDrive-UniversityofIowa/projects/FEL/code/fwc-emails-to-pdfs/img/blurrypdf.png" width="150" alt="alttext"></div>
+<p>bla bla bla bla bla bla bla bla bla bla bla bla We looked at them and stuff bla bla bla bla bla bla</p>
+<div ><img src="file:////Users/hzadeh/Library/CloudStorage/OneDrive-UniversityofIowa/projects/FEL/code/fwc-emails-to-pdfs/img/emailoutline2020.png" width="250" alt="alttext"></div>
+<h3 id="input-pdf-document">Input: PDF document<br></h3>
+<details>
+<summary>Example PDF bookmark</summary>
+<p><a href="http://s-lib007.lib.uiowa.edu/flint/pdf/bookmarks/deq20_b08_216_220.pdf">Click here to go to server PDF link.</a>
+<embed src="http://s-lib007.lib.uiowa.edu/flint/pdf/pages/deq20_b08_216_220.pdf" type="application/pdf" width="100%" height="700px"></p>
+</details>
+<br>
+<h2 id="preparing-directories">Preparing directories</h2>
+<h1 id="preparing-pdfs">Preparing PDFs</h1>
+<p><a href="http://ocr.py">ocr.py</a></p>
+<p>Then, I split the large PDFs into smaller PDFs (bookmarks) and produced .txt pages.</p>
+<p><code>make_pdf_bookmarks.py</code> splits larger PDFs into bookmarks by their bookmarks embedded within the files, outputting into the <code>make_bookmarks/output_pdfs/pdf_bookmarks</code> directory. And <code>get_bookmarks_titles.py</code> obtains the embedded titles of those bookmarks, outputting <code>make_bookmarks/output_json/bookmark_titles.json</code>.</p>
+<p>Next, <code>make_pdf_pages.py</code> splits these .pdf bookmarks into individual pages, which can then be converted into .txt pages with <code>make_txt_pages.py</code>.</p>
+<p>I produced a .json of bookmarks and all their pages with <code>get_page_names.py</code> outputted into <code>make_bookmarks/output_json/page_names.json</code></p>
+<h3 id="naming-convention">Naming convention</h3>
+<p>Bookmark names were generated by combining the PDF name (e.g. &quot;deq20&quot;) + the bookmark number (&quot;b08&quot;) + the first and last pages of the bookmark (&quot;216_220&quot;).</p>
+<p>Example bookmark name: deq20_b08_216_220</p>
+<p>Page names were generated by combining the bookmark name with the the page number of that bookmark (&quot;1&quot;).</p>
+<p>Example page name: deq20_b08_216_220_1</p>
+<h1 id="making-the-database">Making the database</h1>
+<p><code>python3 make_database/get_database.py</code> runs 2 main functions:
+<br><code>get_emails</code> :
+<br><code>tag_duplicates</code> :</p>
+<ul>
+<li>Input files: <code>make_bookmarks/output_json/bookmark_pages.json</code> and ```make_bookmarks/output_pdfs/txt_pages.json``</li>
+<li>Output file: <code>make_database/files/emails.json</code></li>
+<li>In-progress file: <code>make_database/log/emails_ip_####.json</code></li>
+</ul>
+<h1 id="reading-the-output">Reading the output</h1>
+<p>The database is in JSON format. Each email has a unique 5-digit ID, with 17 metadata fields. For example, take this email:</p>
+<p>This email is converted into the following database row:</p>
+<pre><code class="language-json"><span class="hljs-attr">&quot;00045&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+        <span class="hljs-attr">&quot;text_full&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;\n\nFrom: Stanton, Terry A. (Treasury)\n\nSent: Monday, April 15, 2013 1:16 PM\n\nTo: \u2018Kirk Pinho&#x27;\n\nSubject: RE: Flint and the Karegnondi Water Authority\nAttachments: Flint - KWA Approval.pdf\n\nSee attached Kirk.&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;text_body&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;\n\nSee attached Kirk.&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;text_header&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;\n\nFrom: Stanton, Terry A. (Treasury)\n\nSent: Monday, April 15, 2013 1:16 PM\n\nTo: \u2018Kirk Pinho&#x27;\n\nSubject: RE: Flint and the Karegnondi Water Authority\nAttachments: Flint - KWA Approval.pdf&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;sender&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Stanton, Terry A&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;recipients_to&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-string">&quot;Pinho, Kirk&quot;</span>
+        <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;subject&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;RE: Flint and the Karegnondi Water Authority&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;attachments&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-string">&quot;Flint - KWA Approval.pdf&quot;</span>
+        <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;recipients_cc&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">false</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;timestamp&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1366049800</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;email_n_in_bm&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">49</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;pages&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-string">&quot;treasury01_b04_0379_0503_018&quot;</span>
+        <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;bookmark&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;treasury01_b04_0379_0503&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;pdf&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;treasury01&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;department&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;treasury&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;bookmark_title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;2013_APR&quot;</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;on&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">false</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;duplicates&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+        <span class="hljs-attr">&quot;canonical&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">true</span>
+    <span class="hljs-punctuation">}</span>
+</code></pre>
+<p><code>00045</code> is the email ID. Every email identified in the database has a unique ID and corresponds to a unique set of database metadata.</p>
+<p>There are 4 kinds of columns in this row.</p>
+<h3 id="1-text">1: Text<br></h3>
+<p>There is a row for the full text of the email (<code>text_full</code>), as well as the part of text that contains the header (<code>text_header</code>) and the body of the email (<code>text_body</code>).</p>
+<h3 id="2-location-and-characteristics-of-email">2: Location and characteristics of email</h3>
+<p>These rows tell you something about where the email is located and its characteristics.
+First, <code>pages</code> gives you a list of page names (strings) that contain the text of this email. This page/these pages are contained within a <code>bookmark</code>, contained within a <code>pdf</code>.
+There are also lines to tell you what number email it is in the bookmark <code>email_n_in_bm</code>.
+There is a row to tell you whether the email has a <code>On</code> header <code>{&quot;on&quot;:true}</code> or a <code>From:</code> header <code>{&quot;on&quot;:false}</code>.
+And there is a row with how many <code>null</code> values are in these rows.</p>
+<h3 id="3-header-metadata">3: Header metadata<br></h3>
+<p>There is a row for each field that can appear in the header of an email.</p>
+<h4 id="timestamp"><code>timestamp</code></h4>
+<p>The timestamp of the e
+mail in unix format, found in &quot;Date:&quot; or &quot;Sent:&quot; or in an &quot;On...&quot; line.</p>
+<ul>
+<li>A 10-digit unix code, e.g.: <code>Tuesday, October 06, 2015 12:43 PM</code> becomes <code>1444153400</code></li>
+<li><code>0</code>, which means there IS a timestamp in the email (a <code>Date:</code> or <code>Sent:</code> or <code>On...</code> line was found), but the code failed to convert it into a unix timestamp.</li>
+<li><code>false</code>, which means no timestamp line (a <code>Date:</code> or <code>Sent:</code> or <code>On...</code>) could be found.</li>
+</ul>
+<h4 id="sender"><code>sender</code></h4>
+<p>The sender of the email.</p>
+<ul>
+<li>A string with the standardized form of the name. E.g.: <code>From: Brad Coulter</code> becomes <code>Coulter, Brad</code></li>
+<li><code>false</code>, which means a sender line was found, but there was no value in front of it. This often happens when the header is read like this: <code>\n\nFrom:\nSent:\nTo:\nSubject:\n\n</code></li>
+</ul>
+<h4 id="recipients_to"><code>recipients_to</code></h4>
+<p>The recipient/s in the &quot;To:&quot; line of the email. Every email has at least one recipient, but for <code>On:</code> emails, we are unable to know from the header metadata alone who the recipient/s is/are. In this case, the <code>recipients_to</code> value is <code>false</code>.</p>
+<ul>
+<li>A list of standardized names that appear in the <code>To:</code> line.</li>
+<li><code>false</code>, which means a <code>To:</code> line was not found because the header is <code>On...</code> type.</li>
+<li><code>null</code>, which means a <code>To:</code> line was not found, but the header is <code>From:</code> ... so there should be a <code>To:</code> recipient.</li>
+<li><code>[null]</code>, which means that a name was found in front of <code>To:</code> but the code failed to standardize it.</li>
+</ul>
+<h4 id="recipients_cc"><code>recipients_cc</code></h4>
+<p>The recipient/s in the &quot;Cc:&quot; line of the email. Not every email has <code>Cc:</code> recipients. If there is no <code>Cc:</code> present, the <code>recipients_cc</code> value is <code>false</code>.</p>
+<ul>
+<li>A list of standardized names that appear in the <code>Cc:</code> line.</li>
+<li><code>false</code>, which means a <code>Cc:</code> line was not found, which is okay!</li>
+<li><code>null</code>, which means a <code>Cc:</code> line was found, but the code failed to obtain or standardize the names.</li>
+</ul>
+<h4 id="subject"><code>subject</code></h4>
+<p>The text in the <code>Subject:</code> line.</p>
+<ul>
+<li>A string that appears in the <code>Subject:</code> line.</li>
+<li><code>false</code>, which means a <code>Subject:</code> line was not found. This could be because <code>{&quot;on&quot;:true}</code>, which is okay. But if <code>{&quot;on&quot;:false}</code> it is not okay!</li>
+<li><code>null</code>, which means a <code>Subject:</code> line was found, but the code failed to obtain the value.</li>
+</ul>
+<h4 id="attachments"><code>attachments</code></h4>
+<p>The text in the <code>Attachments:</code> line, which lists the name/s of the attachment/s to the email.<br></p>
+<ul>
+<li>A list of strings that appear in the <code>Attachments:</code> line.</li>
+<li><code>false</code>, which means a <code>Attachments:</code> line was not found, which is okay!</li>
+<li><code>null</code>, which means a <code>Attachments:</code> line was found, but the code failed to obtain the value.</li>
+</ul>
+<p>Voila!</p>
+
+            
+            
+        </body>
+        </html>
