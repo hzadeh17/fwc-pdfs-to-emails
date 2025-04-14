@@ -1,6 +1,6 @@
 from pathlib import Path
 import pathlib
-import re,json,datetime,dateutil.parser,time
+import re,json,datetime,dateutil.parser,time, os
 
 # EMAIL BOUNDARY FUNCTIONS
 
@@ -9,7 +9,7 @@ def getHeaders(text,bm,prt=False): #Returns headers of email
     line="\n*.*"
 
     # GET START METADATA (From: or On...)
-    start_mds=getSenders(text,people_list={},boo=True,prt=0,On=True)
+    start_mds=getSenders(text,people_json={},boo=True,prt=0,On=True)
     start_mds=[start_md for start_md in start_mds if start_md!=None]
     start_mds=[start_md for start_md in start_mds if len(start_md)<200]
 
@@ -223,7 +223,7 @@ def getBody(bm_text,header,time_limit,prt=False): # Returns body of email
 
 def numFromMetadata(text): #Returns count of metadata fields present
 
-    start_mds=getSenders(text,people_list={},boo=True)
+    start_mds=getSenders(text,people_json={},boo=True)
     start_mds=[start_md for start_md in start_mds if start_md!=None]
     start_mds=[start_md for start_md in start_mds if len(start_md)<200]
 
@@ -233,9 +233,9 @@ def numFromMetadata(text): #Returns count of metadata fields present
             return None
         else: #From        
             numTS_From=lenif(getTS(text,On=False,boo=True))
-            numSen_From=lenif(getSenders(text,people_list,boo=True,prt=0,On=False))
-            numTo=lenif(getTos(text,people_list,boo=True))
-            numCc=lenif(getCcs(text+"\n",people_list,boo=True))
+            numSen_From=lenif(getSenders(text,people_json,boo=True,prt=0,On=False))
+            numTo=lenif(getTos(text,people_json,boo=True))
+            numCc=lenif(getCcs(text+"\n",people_json,boo=True))
             numSub=lenif(getSubjects(text,boo=True))
             numAtt=lenif(getAttachments(text))
             return sum([numTS_From,numSen_From,numTo,numCc,numSub,numAtt])
@@ -252,6 +252,7 @@ def getTitle(bookmark,filename): # Get embedded title of pdf bookmark
         if dep.lower() in bookmark.lower():
             for bm_title in data[dep]:
                 data_bookmark=data[dep][bm_title]
+                print(data_bookmark,bookmark)
                 if data_bookmark.lower()==bookmark.lower():
                     found=True
                     return bm_title
@@ -260,11 +261,11 @@ def getTitle(bookmark,filename): # Get embedded title of pdf bookmark
     if found==False:
         return None
 
-people_list = json.load(open("make_database/output/people.json", 'r'))
+people_json = json.load(open("make_database/people.json", 'r'))
 
 # METADATA FUNCTIONS
 
-def getSenders(text,people_list={},boo=False,prt=0,On=True):
+def getSenders(text,people_json={},boo=False,prt=0,On=True):
 
     name_list = re.findall("\n+\W*.rom[:; \W]+.*|\n+\W*Fr[ea]m[:; \W]+.*|\n+\W*from[:; \W]+.*|\n+\W*¥romi*[:; \W]+.*|\n+\W*Fro[imntyve]*[:; \W]+.*|\n+\W*[O0]+n.*wro.e[:;\s]*\n|\n+\W*[O0]+n.*\n*.*wro.e[:;\s]*\n",text)
     if boo==True and On==True:
@@ -286,7 +287,7 @@ def getSenders(text,people_list={},boo=False,prt=0,On=True):
                     for on in ons:
                         try:
                             name=re.findall("[O0]n.*[PAM0-9]+,([^˚]+)[<]*.*wro.e[:;\n]+$",on)[0]
-                            clean_on_name=fix_name(name,people_list)
+                            clean_on_name=fix_name(name,people_json)
                             if 5<len(clean_on_name)<27:
                                 Ons.append(clean_on_name)
                                 if On==True:
@@ -302,7 +303,7 @@ def getSenders(text,people_list={},boo=False,prt=0,On=True):
                 froms = re.findall("\n.{0,10}[\WﬁFEKrIifY¥C][si]*r[eao][enmtyvi]+[-:;'.](.{0,70})", thing) #find froms
                 if froms != []:
                     for fro in froms:
-                        clean_fro_name=fix_name(fro,people_list)
+                        clean_fro_name=fix_name(fro,people_json)
                         if 5<len(clean_fro_name)<27:
                             Froms.append(clean_fro_name)
                             final_list.append(clean_fro_name)
@@ -316,7 +317,7 @@ def getSenders(text,people_list={},boo=False,prt=0,On=True):
             #return name_list
             return final_list
 
-def getTos(e4,people_list={},boo=False,prt=0):
+def getTos(e4,people_json={},boo=False,prt=0):
     name_list = re.findall("\n.{0,10}T[oa][:;]+.*|.*[O0]n.*wro[ft]e.|[O0]n.*\n*.*wro[tf]e[:;\n]",e4)
     if boo==True:
         return [name for name in name_list if booOn(name)==False]
@@ -340,7 +341,7 @@ def getTos(e4,people_list={},boo=False,prt=0):
                             recset=[]
                             recnames=re.split(";|>,|\),|\",|\',",rec)
                             for recname in recnames:
-                                fixed_rec_name=fix_name(recname,people_list)
+                                fixed_rec_name=fix_name(recname,people_json)
                                 if 5<len(fixed_rec_name)<27:
                                     recset.append(fixed_rec_name)
                                 else:
@@ -354,7 +355,7 @@ def getTos(e4,people_list={},boo=False,prt=0):
                         print("ERR ",len(name_list),len(final_list),len(nonnames))
             return final_list
 
-def getCcs(e4,people_list={},boo=False,prt=0):
+def getCcs(e4,people_json={},boo=False,prt=0):
     #name_list = re.findall("\n.{0,10}T[oa][:;]+.*\n+.*C[ec]+[:;]+.*\n*.*\n*Subj|\n.*T[oa][:;]+.*\n+.*C[ec]+[:;]+.*\n|\n.{0,10}T[oa][:;]+.*|\n.{0,10}[O0]n.*\n*.*wro.e.",e4)
     name_list = re.findall("\n.{0,10}T[oa][:;]+.*\n+.*C[ec]+[:;]+.*\n*.*\n*Subject[:;]|\n.{0,10}T[oa][:;]+.*|\n.{0,10}[O0]n.*\n*.*wro.e.",e4)
     if boo==True:
@@ -381,7 +382,7 @@ def getCcs(e4,people_list={},boo=False,prt=0):
                             recset=[]
                             recnames=re.split(";|>,|\),|\",|\',",rec)
                             for recname in recnames:
-                                fixed_rec_name=fix_name(recname,people_list)
+                                fixed_rec_name=fix_name(recname,people_json)
                                 if 5<len(fixed_rec_name)<27:
                                     recset.append(fixed_rec_name)
                                 else:
@@ -448,14 +449,17 @@ def booOn(email_text):
     else:
         return False
 
+# TIMESTAMPS
+
 def getTS(text,On=True,boo=False,Unix=True,Round=-2):
     
-    #regex = json.load(open(Path(pathlib.Path.cwd()/"make_database"/"files"/"regex_uts.json"), 'r'))
+    # Find timestamp field
     fields_regex={
         "date":["Date[:;]\n*(.*)"],
         "sent":["Sent[:;]\n*(.*)"],
         "on":["On ([A-Z].*[AP][M]).*\n*.* wro[tf]e","On ([A-Z].*2[01][0-9][0-9]).*\n*.*wro[tf]e","On(.*\n*.*)wro.e"]
     }
+    
     regex_lines=[]
 
     if On==True:
@@ -468,27 +472,6 @@ def getTS(text,On=True,boo=False,Unix=True,Round=-2):
     regex_line='|'.join(regex_lines)
     hits_list = re.findall(regex_line,text)
 
-    def clean(hit):
-        
-        regex = json.load(open(Path(pathlib.Path.cwd()/"make_database"/"files"/"regex_uts.json"), 'r'))
-
-        for i in range(0,3):
-            for change in regex["timestamp_fixes"]["times"]:
-                try:
-                    target=re.findall(regex["timestamp_fixes"][0],hit)[0]
-                    hit=re.sub(regex["timestamp_fixes"][1],regex["timestamp_fixes"][2],target)
-                except KeyboardInterrupt:
-                    raise KeyboardInterrupt
-                except:
-                    continue
-            
-                hit=fix_timestamp(hit)
-            for field in ["reg_ex","day","month"]:
-                for change in regex["timestamp_fixes"][field]:
-                    hit=re.sub(change[0],change[1],hit)
-
-        return hit
-
     if hits_list==[]: # No timestamp line found
         return False
     else:
@@ -497,15 +480,15 @@ def getTS(text,On=True,boo=False,Unix=True,Round=-2):
             try:
                 hit_string = [hit for hit in list(hits) if len(hit)>6][0]
                 for i in range(0,3):
-                    hit_string=clean(hit_string) ### preprocess
+                    hit_string=clean_timestamp(hit_string) ### preprocess
                     hit_string=fix_timestamp(hit_string)
                 ts_list.append(hit_string)
             except KeyboardInterrupt:
                  raise KeyboardInterrupt
-            except:
-                # Timestamp line found, but empty/invalid
-                ts_list.append(None)
-                #print("TIMESTAMP LINE EMPTY:\t",hits_list)
+            #except:
+             #   # Timestamp line found, but empty/invalid
+              #  ts_list.append(None)
+               # print("TIMESTAMP LINE EMPTY:\t",hits_list)
 
     if boo==True:
         return True
@@ -520,13 +503,14 @@ def getTS(text,On=True,boo=False,Unix=True,Round=-2):
                 if ts == None:
                     unix_ts_list.append(None)
                 else:
-                    try:
-                        unix_ts = int(dateutil.parser.parse(ts).timestamp())
-                        #unix_ts = int(time.mktime(date_time.timetuple()))
-                    except:
-                        print("CAN NOT READ TIMESTAMP:\t",ts,"\t\t\n")
-                        unix_ts=0
-                        bad.append(ts)
+                    #try:
+                        #unix_ts = int(dateutil.parser.parse(ts).timestamp())
+                        #unix_ts = int(time.mktime(date_time.timetuple(ts)))
+                    unix_ts = parse_timestamp(ts,unix=True)
+                    #except:
+                     #   print("CAN NOT READ TIMESTAMP:\t",ts,"\t\t\n")
+                      #  unix_ts=0
+                       # bad.append(ts)
                     if unix_ts<1262347200 or unix_ts>1514808000: # 2010-2018
                         unix_ts=0
                     if Round==False:
@@ -536,7 +520,121 @@ def getTS(text,On=True,boo=False,Unix=True,Round=-2):
                         unix_ts_list.append(unix_ts)
             return unix_ts_list#,bad
 
+# PARSING
+
+def parse_timestamp(ts,unix=True):
+    
+    ts_year=None
+    ts_month=None
+    ts_day=None
+    ts_hr=None
+    ts_min=None
+    ts_apm=None
+
+    months={
+        1:["January","Jan"],
+        2:["February","Feb"],
+        3:["March","Mar"],
+        4:["April","Apr"],
+        5:["May"],
+        6:["June","Jun"],
+        7:["July","Jul"],
+        8:["August","Aug"],
+        9:["September","Sep","Sept"],
+        10:["October","Oct"],
+        11:["November","Nov"],
+        12:["December","Dec"]
+    }
+    jump = [".", ",", ";", "-", "/", "'","at", "on", "and", "ad", "m", "t", "of","st", "nd", "rd", "th"]
+    ts=re.sub(',','',ts)
+    years=[str(year) for year in range(2010,2019)]
+    days=[str(day) for day in range(1,32)]
+    zero_days=[str(z0s(31,day)) for day in range(1,32)]
+
+    ts_tokens=re.split(' ',ts)
+
+    for token in ts_tokens:
+
+            for month_no in months:
+                for month_var in months[month_no]:
+                    if token.lower()==month_var.lower():
+                        ts_month=int(month_no)
+            for year in years:
+                if token==year:
+                    ts_year=int(year)
+            for day in days:
+                if token==day:
+                    ts_day=int(day)
+            for day in zero_days:
+                if token==day:
+                    ts_day=int(day)
+            if ":" in token:
+                ts_hr=int(re.findall("^([01]*[0-9]):[0-5][0-9]",token)[0])
+                ts_min=int(re.findall("^[01]*[0-9]:([0-5][0-9])",token)[0])
+                try:
+                    ts_apm=re.findall("[APap][Mm]",token)[0]
+                except:
+                    pass
+            if re.findall("^[APap][Mm]$",token)!=[]:
+                ts_apm=re.findall("[APap][Mm]",token)[0]
+
+            for jump in [".","-","/","°"]:
+                if jump in token:
+                    # m-d-y
+                    ts_year=int(re.findall("[01]*[0-9]%s[0123]*[0-9]%s([20]*1[0-8])"%jump,token))[0]
+                    ts_month=int(re.findall("([01]*[0-9])%s[0123]*[0-9]%s[20]*1[0-8]"%jump,token))[0]
+                    ts_day=int(re.findall("[01]*[0-9]%s([0123]*[0-9])%s[20]*1[0-8]"%jump,token))[0]
+                    # y-d-m
+                    ts_year=int(re.findall("([20]*1[0-8])%s[01]*[0-9]%s[0123]*[0-9]"%jump,token)[0])
+                    ts_day=int(re.findall("[20]*1[0-8]%s[01]*[0-9]%s([0123]*[0-9])"%jump,token)[0])
+                    ts_month=int(re.findall("[20]*1[0-8]%s([01]*[0-9])%s([0123]*[0-9])"%jump,token)[0])
+        
+    if None in [ts_year, ts_month, ts_day,ts_hr, ts_min, ts_apm]:
+        if None in [ts_year, ts_month, ts_day]:
+            print("Timestamp detection error - ")
+            parsed_ts=datetime.datetime(1969, 12, 31, 18, 0) ### 0
+            print(ts_tokens,[ts_year, ts_month, ts_day,ts_hr, ts_min, ts_apm])
+        else:
+            print("--- Day found, time not found")
+            parsed_ts=datetime.datetime(ts_year, ts_month, ts_day, 0, 0)
+    else:
+        if ts_apm.lower()=="pm":
+            ts_hr=ts_hr+12
+            if ts_hr>23:
+                ts_hr=None
+        if ts_year<2000:
+            ts_year=ts_year+2000
+        parsed_ts=datetime.datetime(ts_year, ts_month, ts_day, ts_hr, ts_min) ###
+        print(ts_tokens,parsed_ts)
+    if unix==False:
+        return parsed_ts
+    elif unix==True:
+        unix_ts=int(parsed_ts.timestamp())
+        return unix_ts
+
 # METADATA FIXING FUNCTIONS
+
+def clean_timestamp(hit):
+    
+    regex = json.load(open(Path(pathlib.Path.cwd()/"make_database"/"regex_uts.json"), 'r'))
+
+    for i in range(0,3):
+        for change in regex["timestamp_fixes"]["times"]:
+            try:
+                target=re.findall(regex["timestamp_fixes"][0],hit)[0]
+                hit=re.sub(regex["timestamp_fixes"][1],regex["timestamp_fixes"][2],target)
+            except KeyboardInterrupt:
+                raise KeyboardInterrupt
+            except:
+                continue
+        
+            hit=fix_timestamp(hit)
+        for field in ["reg_ex","day","month"]:
+            for change in regex["timestamp_fixes"][field]:
+                hit=re.sub(change[0],change[1],hit)
+
+    return hit
+
 
 def fix_timestamp(TS):
     def timefix1(TS): #fix 12: 15 PM
@@ -601,16 +699,16 @@ def fix_timestamp(TS):
     TS= timefix5(TS)
     return TS
 
-def fix_name(ogname,people_list,prt=0): # to clean list
+def fix_name(ogname,people_json,prt=0): # to clean list
 
-    def LikeCanonName(name,people_list,n=0.85):
-        for id in people_list:
-            for var in people_list[id]["vars"]:
-                if re.findall(var,name)!=[]:
-                    return people_list[id]["name"]
+    def LikeCanonName(name,people_json,n=0.85):
+        for id in people_json:
+            for match in people_json[id]["matches"]:
+                if re.findall(match,name)!=[]:
+                    return str(people_json[id]["first"]+" "+people_json[id]["last"])
                 
             import difflib
-            correctname = difflib.get_close_matches(name,people_list[id]["name"],8,n)
+            correctname = difflib.get_close_matches(name,people_json[id]["matches"],8,n)
             if correctname !=[]:
                 return correctname[0]
         return name
@@ -669,9 +767,9 @@ def fix_name(ogname,people_list,prt=0): # to clean list
     name=ogname
     for i in range(0,3):
         try:
-            name=LikeCanonName(name,people_list)
+            name=LikeCanonName(name,people_json)
             name=RemoveExtraString(name)
-            name=toLastFirst(name)
+            #name=toLastFirst(name)
             name=Caps(name)
         except KeyboardInterrupt:
             raise KeyboardInterrupt
@@ -696,3 +794,33 @@ def p(p_str,prt):
         print(p_str)
     elif prt==False:
         pass
+
+def opensplit(pathtotxt,split): 
+    fileDir = os.path.dirname(os.path.realpath('__file__'))
+    filename = os.path.join(fileDir, pathtotxt)
+    f = open(filename, "r+")
+    txtlist0 = f.read()
+    txtlist = re.split(split,txtlist0)
+    return txtlist
+
+def clean_sql(text):
+    text=re.sub(",","µ",text)
+    return text
+
+def convert_sql(emails_json):
+    emails_sql=""
+    for id in emails_json:
+        line="("
+        for item in emails_json[id].items():
+            line.append("\'{!r}\'".format(item))
+            if item!=emails_json[id].items()[-1]:
+                line.append(", ")
+        line.append(")\n")
+        emails_sql.append(line)
+    emails_sql.append("")
+    return emails_sql
+
+def z0s(totalnum,subnum): # eg 4128, 34 .. will return 0034
+    places=len(str(totalnum))
+    zeros_subnum=(places-len(str(subnum)))*'0'+str(subnum)
+    return zeros_subnum

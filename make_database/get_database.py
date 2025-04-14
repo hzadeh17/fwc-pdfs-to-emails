@@ -1,32 +1,31 @@
-import make_database.module as module
+import module
 import re,time,json, pathlib,sys, traceback,random
 from datetime import datetime
 from pathlib import Path
 from urllib import request
 
-FILTER=""
-date="250313"
+FILTER="deq14_b1071"
+date="250414"
+test=True
 
 if FILTER!="":
     FILTERname="_"+FILTER
 else:
     FILTERname=FILTER
 input_filename=Path(pathlib.Path.cwd() /"make_bookmarks"/ "output_json" / "bookmark_pages.json")
-output_filename=Path(pathlib.Path.cwd()/"make_database"/"output" /("%s%s_emails.json"%(date,FILTERname)))
+output_filename=Path(pathlib.Path.cwd()/"make_database"/"test_output" /("%s%s_emails.json"%(date,FILTERname)))
 
 class Q: # initial parameters
 
     path="make_bookmarks/output_pdfs/"
     #path="~/Desktop/deq02/"
-    ipfilename=Path(pathlib.Path.cwd()/"log"/str("log"+(datetime.now()).strftime("%m%d%H%M%S")+".json"))
-    print("Saving to: "+str(ipfilename.stem))
+    ip_filename=Path(pathlib.Path.cwd()/"log"/str("log"+(datetime.now()).strftime("%m%d%H%M%S")+".json"))
+    print("Saving to: "+str(ip_filename.stem))
+    people_json = json.load(open("make_database/people.json", 'r'))
 
     save=True # True (save progress if interrupted) or False (dont save progress)
     prt=False # print progress of header and email body generation
-    online=False # are files local or online?
-
-    #people_list=module.opensplit(Path(pathlib.Path.cwd()/"make_database"/"files"/"names_list.txt"),'\n') # List of canonical names
-    people_list = json.load(open("make_database/output/people.json", 'r'))
+    online=True # are files local or online?
 
     line="\n*.*"
     url_root="https://fwcpublicarchive.lib.uiowa.edu/text/"
@@ -39,7 +38,9 @@ class Q: # initial parameters
 
 ######
 
-def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_list=Q.people_list,url_root=Q.url_root,prt=Q.prt,path=Q.path,online=Q.online):
+
+
+def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,url_root=Q.url_root,prt=Q.prt,path=Q.path,online=Q.online):
     a=0
     i=0
     error=[]
@@ -109,11 +110,11 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_list=Q.people_list,
                     email["text_header"]=header["header_text"]
 
                     # STEP 4: GET METADATA OF BODY
-                    email["sender"]=module.getSenders('\n'+email["text_header"]+'\n',people_list)
-                    email["recipients_to"]=module.getTos(email["text_header"],people_list)
+                    email["sender"]=module.getSenders('\n'+email["text_header"]+'\n',people_json)
+                    email["recipients_to"]=module.getTos(email["text_header"],people_json)
                     email["subject"]=module.getSubjects(email["text_header"])
                     email["attachments"]=module.getAttachments(email["text_full"])
-                    email["recipients_cc"]=module.getCcs(email["text_header"],people_list)
+                    email["recipients_cc"]=module.getCcs(email["text_header"],people_json)
                     email["timestamp"]=module.getTS(email["text_header"],On=True,boo=False,Unix=True,Round=-2)
                     
                     for field in email:
@@ -140,7 +141,7 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_list=Q.people_list,
                     email["bookmark"]=header["bookmark"]
                     email["pdf"]=re.findall("([A-Za-z0-9]+)_b[0-9]+",header["bookmark"])[0]
                     email["department"]=re.findall("([A-Za-z]+)[0-9]*_b",header["bookmark"])[0]
-                    email["bookmark_title"]= module.getTitle(header["bookmark"],Path(pathlib.Path.cwd()/"make_bookmarks"/"output_json"/str("bookmark_titles.json")))
+                    email["bookmark_title"]= module.getTitle(header["bookmark"],Path(pathlib.Path.cwd()/"make_bookmarks"/"output_json"/"bookmark_titles.json"))
                     email["on"]=module.booOn(email_text)
 
                     # MAKE KEY
@@ -154,8 +155,32 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_list=Q.people_list,
 
             #Save complete bookmark
                 emails_json.update(emails)
-                f=open(Q.ipfilename,"w")
+                f=open(Q.ip_filename,"w")
                 f.write(json.dumps(emails_json, indent = 4))
+            #Make/Update people file
+                #for id in Q.people_json:
+                    #names=[email["sender"]]
+                    #names.extend([email["recipients_to"]])
+                    #names.extend([email["recipients_cc"]])
+                    #for name in names:
+                        #if name not in Q.people_json[id]["matches"]:
+                            #id=
+                            #p={
+                                #"first":re.findall("^([\w\W]+)\s",name)[0],
+                                #"last":re.findall("\s([\w\W]+)$,",name)[0],
+                                #"matches":[]                               
+                            #}
+                            #people_json.update() ## TO DO ... Finish
+                        #people.update({id:p})
+
+
+                #p_obj = json.dumps(people, indent=4)
+                #people_filename=Path(pathlib.Path.cwd()/"make_database"/"test_output"/"people.json")
+                #f=open(people_filename,"w")
+                #f.write(p_obj)
+                #f.close()
+
+
         except Exception as e:
             print("\t\t", bm_name," --BOOKMARK NOT COMPLETED *** ***")
             print("\t\t",e,traceback.format_exc(),'\n')
@@ -171,7 +196,7 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_list=Q.people_list,
         key0=module.z0s(num_emails,key) # adds zeros to keys
         new_emails_json.update({key0:emails_json[key]})
 
-    #filename=Path(pathlib.Path.cwd()/"make_database"/"output"/("not_completed_%s_%s.txt"%(date,FILTER)))
+    #filename=Path(pathlib.Path.cwd()/"make_database"/"test_output"/("not_completed_%s_%s.txt"%(date,FILTER)))
     #f=open(filename,"w")
     #f.write("\n".join(not_completed_pages))
     
@@ -305,7 +330,7 @@ print("\nNum bookmarks:",len(Q.bookmark_pages.keys()))
 print("\nGetting emails...")
 emails_json=get_emails(FILTER)
 
-#emails_json=json.load(open(output_filename, 'r'))
+#emails_json=json.load(open(test_output_filename, 'r'))
 
 print("Identifying duplicates...")
 matches,emails_json=tag_duplicates(emails_json)
@@ -351,6 +376,6 @@ for item in list(descs.keys()):
     d_text=d_text+line
 
 print(d_text)
-f=open("make_database/output/descriptives_%s.json"%output_filename.stem,"w")
+f=open("make_database/test_output/descriptives_%s.json"%output_filename.stem,"w")
 f.write(d_text)
 f.close()

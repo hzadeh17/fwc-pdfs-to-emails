@@ -1,0 +1,4 @@
+log/
+make_database/test_output/
+make_bookmarks/input_pdfs/
+make_bookmarks/output_pdfs/
