@@ -615,7 +615,11 @@ def parse_timestamp(ts,time_range,unix=True):
     else:
         if ts_year<2000:
             ts_year=ts_year+2000
-        parsed_ts=datetime.datetime(ts_year, ts_month, ts_day, ts_hr, ts_min) ###
+        try:
+            parsed_ts=datetime.datetime(ts_year, ts_month, ts_day, ts_hr, ts_min) ###
+        except Exception as e:
+            print("Timestamp parsing error\n",ts,'\n',e)
+            parsed_ts=datetime.datetime(1969, 12, 31, 18, 0)
         #print(ts_tokens,parsed_ts)
     if unix==False:
         return parsed_ts

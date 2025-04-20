@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib import request
 
-FILTER="deq14_b102"
+FILTER=""
 date="250420"
 test=True
 
@@ -26,7 +26,7 @@ class Q: # initial parameters
 
     save=True # True (save progress if interrupted) or False (dont save progress)
     prt=False # print progress of header and email body generation
-    online=True # are files local or online?
+    online=False# are files local or online?
     update_people=True # update people.json with new names
 
     line="\n*.*"
