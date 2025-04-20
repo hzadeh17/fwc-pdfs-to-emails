@@ -4,16 +4,17 @@ from datetime import datetime
 from pathlib import Path
 from urllib import request
 
-FILTER="deq14_b1071"
-date="250414"
+FILTER="deq14_b102"
+date="250420"
 test=True
 
 if FILTER!="":
     FILTERname="_"+FILTER
 else:
     FILTERname=FILTER
-input_filename=Path(pathlib.Path.cwd() /"make_bookmarks"/ "output_json" / "bookmark_pages.json")
-output_filename=Path(pathlib.Path.cwd()/"make_database"/"test_output" /("%s%s_emails.json"%(date,FILTERname)))
+input_filename_path=Path(pathlib.Path.cwd() /"make_bookmarks"/ "output_json" / "bookmark_pages.json")
+output_filename="%s%s_emails"%(date,FILTERname)
+
 
 class Q: # initial parameters
 
@@ -21,23 +22,23 @@ class Q: # initial parameters
     #path="~/Desktop/deq02/"
     ip_filename=Path(pathlib.Path.cwd()/"log"/str("log"+(datetime.now()).strftime("%m%d%H%M%S")+".json"))
     print("Saving to: "+str(ip_filename.stem))
-    people_json = json.load(open("make_database/people.json", 'r'))
+    people_json = json.load(open("make_database/base_people.json", 'r'))
 
     save=True # True (save progress if interrupted) or False (dont save progress)
     prt=False # print progress of header and email body generation
     online=True # are files local or online?
+    update_people=True # update people.json with new names
 
     line="\n*.*"
     url_root="https://fwcpublicarchive.lib.uiowa.edu/text/"
     
-    all_bookmark_pages = json.load(open(input_filename, 'r'))
+    all_bookmark_pages = json.load(open(input_filename_path, 'r'))
     bookmark_pages={}
     for bm_name in all_bookmark_pages:
         if FILTER.lower() in bm_name:
             bookmark_pages.update({bm_name.lower():all_bookmark_pages[bm_name]})
 
 ######
-
 
 
 def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,url_root=Q.url_root,prt=Q.prt,path=Q.path,online=Q.online):
@@ -141,13 +142,41 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,
                     email["bookmark"]=header["bookmark"]
                     email["pdf"]=re.findall("([A-Za-z0-9]+)_b[0-9]+",header["bookmark"])[0]
                     email["department"]=re.findall("([A-Za-z]+)[0-9]*_b",header["bookmark"])[0]
-                    email["bookmark_title"]= module.getTitle(header["bookmark"],Path(pathlib.Path.cwd()/"make_bookmarks"/"output_json"/"bookmark_titles.json"))
-                    email["on"]=module.booOn(email_text)
+                    email["bookmark_title"]= None#module.getTitle(header["bookmark"],Path(pathlib.Path.cwd()/"make_bookmarks"/"output_json"/"bookmark_titles.json"))
+                    email["on_true"]=module.booOn(email_text)
 
                     # MAKE KEY
                     a=a+1
                     #key=a#module.z0s(num_emails,a)  
                     emails.update({a:email})
+
+                    #Make/Update people file
+                    if Q.update_people==True:
+                        names=[email["sender"]]
+                        if email["recipients_to"] not in [False,None]:
+                            names.extend(list(email["recipients_to"]))
+                        if email["recipients_cc"] not in [False,None]:
+                            names.extend(list(email["recipients_cc"]))
+                        for name in [name for name in names if type(name)==str]:
+                            Found=False
+                            for id in people_json:
+                                for match in people_json[id]["matches"]:
+                                    if re.findall(match,name)!=[]:
+                                        Found=True
+                                        people_json[id]["metadata_frequency"]+=1
+                            if Found==False:
+                                try:
+                                    id=module.z0s(len(people_json.keys()),len(people_json.keys())+1)
+                                    p={
+                                        "first":re.findall("^([\w\W]+)\s",name)[0],
+                                        "last":re.findall("\s([\w\W]+)$",name)[0],
+                                        "matches":[name],
+                                        "metadata_frequency":1                               
+                                    }
+                                    people_json.update({id:p})
+                                except:
+                                    #print(name)
+                                    pass
 
                 else: # emails missing field(s)
                     newhe=(header["bookmark"],header["header_text"])
@@ -157,28 +186,14 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,
                 emails_json.update(emails)
                 f=open(Q.ip_filename,"w")
                 f.write(json.dumps(emails_json, indent = 4))
-            #Make/Update people file
-                #for id in Q.people_json:
-                    #names=[email["sender"]]
-                    #names.extend([email["recipients_to"]])
-                    #names.extend([email["recipients_cc"]])
-                    #for name in names:
-                        #if name not in Q.people_json[id]["matches"]:
-                            #id=
-                            #p={
-                                #"first":re.findall("^([\w\W]+)\s",name)[0],
-                                #"last":re.findall("\s([\w\W]+)$,",name)[0],
-                                #"matches":[]                               
-                            #}
-                            #people_json.update() ## TO DO ... Finish
-                        #people.update({id:p})
+            
 
 
-                #p_obj = json.dumps(people, indent=4)
-                #people_filename=Path(pathlib.Path.cwd()/"make_database"/"test_output"/"people.json")
-                #f=open(people_filename,"w")
-                #f.write(p_obj)
-                #f.close()
+                p_obj = json.dumps(people_json, indent=4)
+                people_filename=Path(pathlib.Path.cwd()/"make_database"/"test_output"/("%s%s_people.json"%(date,FILTERname)))
+                f=open(people_filename,"w")
+                f.write(p_obj)
+                f.close()
 
 
         except Exception as e:
@@ -335,17 +350,78 @@ emails_json=get_emails(FILTER)
 print("Identifying duplicates...")
 matches,emails_json=tag_duplicates(emails_json)
 
-obj2 = json.dumps(emails_json, indent=4)
-f=open(output_filename,"w")
-f.write(obj2)
+f=open(Path(pathlib.Path.cwd()/"make_database"/"test_output" /("%s.%s"%(output_filename,"json"))),"w")
+f.write(json.dumps(emails_json, indent=4))
 f.close()
-print("\nFinal json saved to ",output_filename)
+print("\nFinal .json saved to %s.%s"%(output_filename,"json"))
 
-obj1 = json.dumps(matches, indent=4)
-matches_filename=Path(pathlib.Path.cwd()/"log"/("matches_%s_%s.json"%(date,FILTER)))
-f=open(matches_filename,"w")
-f.write(obj1)
+f=open(Path(pathlib.Path.cwd()/"log"/("matches_%s_%s.json"%(date,FILTER))),"w")
+f.write(json.dumps(matches, indent=4))
 f.close()
+
+def clean_sql(text): #ß = '  ∆ = , ∂ = \n
+    text=re.sub("'","ß",text)
+    text=re.sub(",","∆",text)
+    text=re.sub("\n","∂",text)
+    return text
+
+split="', '"
+emails_sql="""
+CREATE TABLE `emails` (
+  `id` int(11) NOT NULL,
+  `text_full` longtext DEFAULT NULL,
+  `text_body` longtext DEFAULT NULL,
+  `text_header` longtext DEFAULT NULL,
+  `sender` tinytext DEFAULT NULL,
+  `recipient_to` longtext DEFAULT NULL,
+  `subject` text DEFAULT NULL,
+  `attachments` tinytext DEFAULT NULL,
+  `recipient_cc` text DEFAULT NULL,
+  `timestamp` bigint(20) DEFAULT NULL,
+  `email_n_in_bm` int(11) DEFAULT NULL,
+  `pages` text DEFAULT NULL,
+  `bookmark` text DEFAULT NULL,
+  `pdf` text DEFAULT NULL,
+  `department` text DEFAULT NULL,
+  `bookmark_title` text DEFAULT NULL,
+  `on_true` tinyint(4) DEFAULT NULL,
+  `duplicates` text DEFAULT NULL,
+  `canonical` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `emails`
+--
+
+INSERT INTO `emails` (`text_full`, `text_body`, `text_header`, `sender`, `recipients_to`, `subject`, `attachments`, `recipients_cc`, `timestamp`, `email_n_in_bm`, `pages`, `bookmark`, `pdf`, `department`, `bookmark_title`, `on_true`, `duplicates`, `canonical`) VALUES
+"""
+for id in emails_json:
+    line="\n('"
+    line=line+(str(id+"', "))
+    for field in emails_json[id]:
+        line=line+"'"
+        if type(emails_json[id][field]) in [list,tuple]:
+            item='; '.join([str(p) for p in emails_json[id][field]])
+        elif emails_json[id][field]==None:
+            item="null"
+        elif emails_json[id][field]==False:
+            item="false"
+        elif emails_json[id][field]==True:
+            item="true"
+        elif type(emails_json[id][field])==str:
+            item=emails_json[id][field]
+        elif type(emails_json[id][field])==int:
+            item=str(emails_json[id][field])
+        item=clean_sql(item)
+        line=line+item
+        line=line+"', "
+    line=line[:-2]+")"
+    emails_sql=emails_sql+line
+
+f=open(Path(pathlib.Path.cwd()/"make_database"/"test_output" /("%s.%s"%(output_filename,".sql"))),"w")
+f.write(emails_sql)
+f.close()
+print("\nFinal .sql saved to %s.%s"%(output_filename,"sql"))
 
 descs={
     "num_emails_total":len(list(emails_json.keys())),
@@ -361,7 +437,7 @@ for id in emails_json:
         descs["num_emails_withdup"]+=1
     if emails_json[id]["canonical"]!=True: 
         descs["num_emails_canon"]+=1
-    if emails_json[id]["on"]==True: 
+    if emails_json[id]["on_true"]==True: 
         descs["num_emails_onsender"]+=1
     if emails_json[id]["sender"]==None:
         descs["num_senders_null"]+=1
@@ -370,12 +446,12 @@ for id in emails_json:
     if emails_json[id]["timestamp"]==0: 
         descs["num_timestamps_null"]+=1
 
-d_text="DESCRIPTIVES for %s\n- - -\n\n"%output_filename.stem
+d_text="DESCRIPTIVES for %s\n- - -\n\n"%output_filename
 for item in list(descs.keys()):
     line=str(item+"\t\t\t"+str(descs[item]))+'\n'
     d_text=d_text+line
 
 print(d_text)
-f=open("make_database/test_output/descriptives_%s.json"%output_filename.stem,"w")
+f=open("make_database/test_output/descriptives_%s.json"%output_filename,"w")
 f.write(d_text)
 f.close()

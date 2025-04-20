@@ -1,6 +1,6 @@
 from pathlib import Path
 import pathlib
-import re,json,datetime,dateutil.parser,time, os
+import re,json,datetime,time, os
 
 # EMAIL BOUNDARY FUNCTIONS
 
@@ -261,7 +261,7 @@ def getTitle(bookmark,filename): # Get embedded title of pdf bookmark
     if found==False:
         return None
 
-people_json = json.load(open("make_database/people.json", 'r'))
+people_json = json.load(open("make_database/base_people.json", 'r'))
 
 # METADATA FUNCTIONS
 
@@ -451,7 +451,7 @@ def booOn(email_text):
 
 # TIMESTAMPS
 
-def getTS(text,On=True,boo=False,Unix=True,Round=-2):
+def getTS(text,On=True,boo=False,Unix=True,Round=-2, time_range=[1262347200,1514808000]): #2010-2018
     
     # Find timestamp field
     fields_regex={
@@ -485,10 +485,10 @@ def getTS(text,On=True,boo=False,Unix=True,Round=-2):
                 ts_list.append(hit_string)
             except KeyboardInterrupt:
                  raise KeyboardInterrupt
-            #except:
-             #   # Timestamp line found, but empty/invalid
-              #  ts_list.append(None)
-               # print("TIMESTAMP LINE EMPTY:\t",hits_list)
+            except:
+                # Timestamp line found, but empty/invalid
+                ts_list.append(None)
+                #print("TIMESTAMP LINE EMPTY:\t")
 
     if boo==True:
         return True
@@ -506,23 +506,25 @@ def getTS(text,On=True,boo=False,Unix=True,Round=-2):
                     #try:
                         #unix_ts = int(dateutil.parser.parse(ts).timestamp())
                         #unix_ts = int(time.mktime(date_time.timetuple(ts)))
-                    unix_ts = parse_timestamp(ts,unix=True)
+                    unix_ts = parse_timestamp(ts,time_range,unix=True)
                     #except:
                      #   print("CAN NOT READ TIMESTAMP:\t",ts,"\t\t\n")
                       #  unix_ts=0
                        # bad.append(ts)
-                    if unix_ts<1262347200 or unix_ts>1514808000: # 2010-2018
-                        unix_ts=0
-                    if Round==False:
+                    if unix_ts<time_range[0] or unix_ts>time_range[1]: # 2010-2018
+                        unix_ts=None
                         unix_ts_list.append(unix_ts)
                     else:
-                        unix_ts=round(unix_ts,Round)
-                        unix_ts_list.append(unix_ts)
+                        if Round==False:
+                            unix_ts_list.append(unix_ts)
+                        else:
+                            unix_ts=round(unix_ts,Round)
+                            unix_ts_list.append(unix_ts)
             return unix_ts_list#,bad
 
 # PARSING
 
-def parse_timestamp(ts,unix=True):
+def parse_timestamp(ts,time_range,unix=True):
     
     ts_year=None
     ts_month=None
@@ -545,9 +547,10 @@ def parse_timestamp(ts,unix=True):
         11:["November","Nov"],
         12:["December","Dec"]
     }
-    jump = [".", ",", ";", "-", "/", "'","at", "on", "and", "ad", "m", "t", "of","st", "nd", "rd", "th"]
-    ts=re.sub(',','',ts)
-    years=[str(year) for year in range(2010,2019)]
+    #jump = [".", ",", ";", "-", "/", "'","at", "on", "and", "ad", "m", "t", "of","st", "nd", "rd", "th"]
+    ts=re.sub('[,;£μνβωψχζασδφγηξκλπιθυτρεςºª•¶§∞¢£∑œ¥ƒ©∆¬≈ç√∫˜]','',ts)
+
+    years=[str(year) for year in range(int(datetime.datetime.fromtimestamp(time_range[0]).strftime('%Y')),int(datetime.datetime.fromtimestamp(time_range[1]).strftime('%Y')))]
     days=[str(day) for day in range(1,32)]
     zero_days=[str(z0s(31,day)) for day in range(1,32)]
 
@@ -569,43 +572,51 @@ def parse_timestamp(ts,unix=True):
                 if token==day:
                     ts_day=int(day)
             if ":" in token:
-                ts_hr=int(re.findall("^([01]*[0-9]):[0-5][0-9]",token)[0])
-                ts_min=int(re.findall("^[01]*[0-9]:([0-5][0-9])",token)[0])
+                try:
+                    ts_hr=int(re.findall("^([01]*[0-9]):[0-5][0-9]",token)[0])
+                    ts_min=int(re.findall("^[01]*[0-9]:([0-5][0-9])",token)[0])
+                except:
+                    print(token)
                 try:
                     ts_apm=re.findall("[APap][Mm]",token)[0]
                 except:
                     pass
             if re.findall("^[APap][Mm]$",token)!=[]:
-                ts_apm=re.findall("[APap][Mm]",token)[0]
+                ts_apm=re.findall("[APap][Mm]",token)[0].lower()
 
-            for jump in [".","-","/","°"]:
+            for jump in ["-","/","°"]:
                 if jump in token:
-                    # m-d-y
-                    ts_year=int(re.findall("[01]*[0-9]%s[0123]*[0-9]%s([20]*1[0-8])"%jump,token))[0]
-                    ts_month=int(re.findall("([01]*[0-9])%s[0123]*[0-9]%s[20]*1[0-8]"%jump,token))[0]
-                    ts_day=int(re.findall("[01]*[0-9]%s([0123]*[0-9])%s[20]*1[0-8]"%jump,token))[0]
-                    # y-d-m
-                    ts_year=int(re.findall("([20]*1[0-8])%s[01]*[0-9]%s[0123]*[0-9]"%jump,token)[0])
-                    ts_day=int(re.findall("[20]*1[0-8]%s[01]*[0-9]%s([0123]*[0-9])"%jump,token)[0])
-                    ts_month=int(re.findall("[20]*1[0-8]%s([01]*[0-9])%s([0123]*[0-9])"%jump,token)[0])
-        
+                    try:
+                        # m-d-y
+                        ts_year=int(re.findall("[01]*[0-9]%s[0123]*[0-9]%s([20]*1[0-8])"%(jump,jump),token)[0])
+                        ts_month=int(re.findall("([01]*[0-9])%s[0123]*[0-9]%s[20]*1[0-8]"%(jump,jump),token)[0])
+                        ts_day=int(re.findall("[01]*[0-9]%s([0123]*[0-9])%s[20]*1[0-8]"%(jump,jump),token)[0])
+                    except:
+                        pass
+                    try:
+                        # y-d-m
+                        ts_year=int(re.findall("([20]*1[0-8])%s[01]*[0-9]%s[0123]*[0-9]"%(jump,jump),token)[0])
+                        ts_day=int(re.findall("[20]*1[0-8]%s[01]*[0-9]%s([0123]*[0-9])"%(jump,jump),token)[0])
+                        ts_month=int(re.findall("[20]*1[0-8]%s([01]*[0-9])%s([0123]*[0-9])"%(jump,jump),token)[0])
+                    except:
+                        pass
+    if ts_apm=="pm" and ts_hr not in [None, 12]:
+        ts_hr=ts_hr+12
+        if ts_hr>23:
+            ts_hr=None
     if None in [ts_year, ts_month, ts_day,ts_hr, ts_min, ts_apm]:
         if None in [ts_year, ts_month, ts_day]:
-            print("Timestamp detection error - ")
+            #print("Day not found\n",ts_tokens,[ts_year, ts_month, ts_day,ts_hr, ts_min, ts_apm])
             parsed_ts=datetime.datetime(1969, 12, 31, 18, 0) ### 0
-            print(ts_tokens,[ts_year, ts_month, ts_day,ts_hr, ts_min, ts_apm])
         else:
-            print("--- Day found, time not found")
+            #print("Time not found\n",ts_tokens,[ts_year, ts_month, ts_day,ts_hr, ts_min, ts_apm])
             parsed_ts=datetime.datetime(ts_year, ts_month, ts_day, 0, 0)
+
     else:
-        if ts_apm.lower()=="pm":
-            ts_hr=ts_hr+12
-            if ts_hr>23:
-                ts_hr=None
         if ts_year<2000:
             ts_year=ts_year+2000
         parsed_ts=datetime.datetime(ts_year, ts_month, ts_day, ts_hr, ts_min) ###
-        print(ts_tokens,parsed_ts)
+        #print(ts_tokens,parsed_ts)
     if unix==False:
         return parsed_ts
     elif unix==True:
@@ -699,77 +710,87 @@ def fix_timestamp(TS):
     TS= timefix5(TS)
     return TS
 
-def fix_name(ogname,people_json,prt=0): # to clean list
 
-    def LikeCanonName(name,people_json,n=0.85):
-        for id in people_json:
-            for match in people_json[id]["matches"]:
-                if re.findall(match,name)!=[]:
-                    return str(people_json[id]["first"]+" "+people_json[id]["last"])
-                
-            import difflib
-            correctname = difflib.get_close_matches(name,people_json[id]["matches"],8,n)
-            if correctname !=[]:
-                return correctname[0]
-        return name
-
-    def RemoveExtraString(name):
-        original_name=name
-        for range in (0,5):
-            name=re.sub("[a-zA-Z.:]+@*[a-zA-Z.]+[.][a-z]+",'',name)
-            name=re.sub("mailto:*","",name)
-            name = re.sub("[\[\<\(\{].*|\s+\n|[\s\n\W]+$|^[\s\n\W_]+|^ |:|[\w]*@[\w.]*|[0-9]+|~","",name)
-            name=re.sub("[A-Z]{2,}","",name)
-            name=re.sub("[ ]{2,}"," ",name)
-            if len(name)<4:
-                return original_name
+def LikeCanonName(name,people_json,n=0.85):
+    Found=False
+    for id in people_json:
+        for match in people_json[id]["matches"]:
+            if re.findall(match,name)!=[]:
+                Found=True
+                return str(people_json[id]["first"]+" "+people_json[id]["last"])
             else:
-                return name
-        
-    def Caps(name):
-        name=name.lower()
-        firstletters=re.findall("^[a-z]|[- \'][a-z]",name)
-        for i in range(0,len(firstletters)):
-            name=re.sub(firstletters[i],firstletters[i].upper(),name,1)
+                import difflib
+                correctname = difflib.get_close_matches(name,people_json[id]["matches"],8,n)
+                if correctname !=[]:
+                    Found=True
+                    return correctname[0]
+    if Found==False:
         return name
 
-    def toLastFirst(name):
-        import re
-        # First Last -> Last, First
-        re_firstname="[A-Za-z]{3,}"
-        re_lastname="[A-Z\'a-z]{2,}[- ]{0,1}[A-Za-z]+"
-        if len(name)>3:
-            lastcommafirst = re.findall("^"+re_lastname+"[,.][- ]"+re_firstname+"$",name)
-            firstlast=re.findall("^"+re_firstname+" "+re_lastname+"$",name)
-            if lastcommafirst != []:
-                for lcf in lastcommafirst:
-                    lcf=re.sub("[.]",",",lcf)
-                    return lcf
-            
-            elif firstlast != []:
-
-                firstname = re.findall("^("+re_firstname+") "+re_lastname+"$",name)[0]
-                lastname = re.findall("^"+re_firstname+" ("+re_lastname+")$",name)[0]
-                firstname=re.sub("\n|\'|\"","",firstname)
-                firstname=re.sub("\W,",",",firstname)
-                firstname=re.sub(" . ","",firstname)
-                lastname=re.sub("\n|\'|\"","",lastname)
-                lastname=re.sub("\W,",",",lastname)
-                lastname=re.sub(" . ","",lastname)
-                L_F=lastname+", "+firstname
-                return L_F
-
-            elif firstlast == [] and lastcommafirst == []:
-                return name
+def RemoveExtraString(name):
+    original_name=name
+    for range in (0,5):
+        name=re.sub("[a-zA-Z.:]+@*[a-zA-Z.]+[.][a-z]+",'',name)
+        name=re.sub("mailto:*","",name)
+        name = re.sub("[\[\<\(\{].*|\s+\n|[\s\n\W]+$|^[\s\n\W_]+|^ |:|[\w]*@[\w.]*|[0-9]+|~","",name)
+        name=re.sub("[A-Z]{2,}","",name)
+        name=re.sub("[ ]{2,}"," ",name)
+        if len(name)<4:
+            return original_name
         else:
             return name
+    
+def Caps(name):
+    name=name.lower()
+    firstletters=re.findall("^[a-z]|[- \'][a-z]",name)
+    for i in range(0,len(firstletters)):
+        name=re.sub(firstletters[i],firstletters[i].upper(),name,1)
+    return name
 
+def ChangeOrder(name,LastFirst=False):
+    import re
+    # First Last -> Last, First
+    re_firstname="[A-Za-z]{3,}"
+    re_lastname="[A-Z\'a-z]{2,}[- ]{0,1}[A-Za-z]+"
+    if len(name)>3:
+        lastcommafirst = re.findall("^"+re_lastname+"[,.][- ]"+re_firstname+"$",name)
+        firstlast=re.findall("^"+re_firstname+" "+re_lastname+"$",name)
+        
+        if lastcommafirst != []:
+            if LastFirst==True:
+                name=re.sub("[.]",",",name)
+                return name
+            elif LastFirst==False:
+                lastname = re.findall("^("+re_lastname+")[,.] "+re_firstname+"$",name)[0]
+                firstname = re.findall("^"+re_lastname+"[,.] ("+re_firstname+")$",name)[0]
+                firstname=re.sub("[\n\'\"\W.]","",firstname)
+                lastname=re.sub("[\n\'\"\W.]","",lastname)
+                F_L=firstname+" "+lastname
+                return F_L
+        
+        elif firstlast != []:
+            if LastFirst==True:
+                firstname = re.findall("^("+re_firstname+") "+re_lastname+"$",name)[0]
+                lastname = re.findall("^"+re_firstname+" ("+re_lastname+")$",name)[0]
+                firstname=re.sub("[\n\'\"\W.]","",firstname)
+                lastname=re.sub("[\n\'\"\W.]","",lastname)
+                L_F=lastname+", "+firstname
+                return L_F
+            elif LastFirst==False:
+                return name
+
+        elif firstlast == [] and lastcommafirst == []:
+            return name
+    else:
+        return name
+    
+def fix_name(ogname,people_json,prt=0): # to clean list
     name=ogname
     for i in range(0,3):
         try:
             name=LikeCanonName(name,people_json)
             name=RemoveExtraString(name)
-            #name=toLastFirst(name)
+            name=ChangeOrder(name,LastFirst=False)
             name=Caps(name)
         except KeyboardInterrupt:
             raise KeyboardInterrupt
