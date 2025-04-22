@@ -4,3 +4,6 @@ make_bookmarks/input_pdfs/
 make_bookmarks/output_pdfs/
 archived
 make_bookmarks/test_output
+names.txt
+names.json
+names.py

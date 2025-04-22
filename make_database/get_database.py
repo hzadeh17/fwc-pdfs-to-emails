@@ -5,7 +5,7 @@ from pathlib import Path
 from urllib import request
 
 FILTER=""
-date="250420"
+date="250422"
 test=True
 
 if FILTER!="":
@@ -60,7 +60,7 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,
                     if page_name[-4:] in [".txt",".pdf"]:
                         page_name=output_filename[:-4]
                     if online==True:
-                        page_name=re.sub("dhhs","DHHS",page_name) #########
+                        page_name= re.sub("dhhs","DHHS",page_name) #########
                         page_url=url_root+page_name+".txt"
                         response = request.urlopen(page_url)
                         page_text = response.read().decode('utf8')
@@ -123,25 +123,25 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,
                             try:
                                 email[field]=email[field][0]
                             except:
-                                print("\nEMPTY %s FIELD IN %s\n"%(field,bm_name))
+                                print("\n- * - * - EMPTY %s FIELD IN %s\n"%(field,bm_name))
                                 if field=="timestamp":
                                     email["timestamp"]=0
 
                     # STEP 5: ADD DESCRIPTIVES
 
                     email["email_n_in_bm"]=header["metadata_order"]
-                    pages=re.findall("xxxEND_PAGE:([A-Za-z0-9]+_b[0-9]+_[0-9]+_[0-9]+_[0-9]+).txt",email_text)
+                    pages= re.findall(r"xxxEND_PAGE:([A-Za-z0-9]+_b[0-9]+_[0-9]+_[0-9]+_[0-9]+).txt",email_text)
                     if pages==[]:
                         email["pages"]=[last_page.lower()] # if email does not span multiple pages
                     elif pages!=[]:
                         if "xxxEND_PAGE:" not in email_text[-13:]: # email split btwn pages, add next page
-                            last_page_num=str(int(re.findall("_([0-9]+)$",pages[-1])[0])+1)
+                            last_page_num=str(int( re.findall(r"_([0-9]+)$",pages[-1])[0])+1)
                             last_page=str(header["bookmark"]+"_"+last_page_num)
                             pages.append(last_page)
                         email["pages"]=[page.lower() for page in pages]
                     email["bookmark"]=header["bookmark"]
-                    email["pdf"]=re.findall("([A-Za-z0-9]+)_b[0-9]+",header["bookmark"])[0]
-                    email["department"]=re.findall("([A-Za-z]+)[0-9]*_b",header["bookmark"])[0]
+                    email["pdf"]= re.findall(r"([A-Za-z0-9]+)_b[0-9]+",header["bookmark"])[0]
+                    email["department"]= re.findall(r"([A-Za-z]+)[0-9]*_b",header["bookmark"])[0]
                     email["bookmark_title"]= None#module.getTitle(header["bookmark"],Path(pathlib.Path.cwd()/"make_bookmarks"/"output_json"/"bookmark_titles.json"))
                     email["on_true"]=module.booOn(email_text)
 
@@ -160,16 +160,20 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,
                         for name in [name for name in names if type(name)==str]:
                             Found=False
                             for id in people_json:
-                                for match in people_json[id]["matches"]:
-                                    if re.findall(match,name)!=[]:
-                                        Found=True
-                                        people_json[id]["metadata_frequency"]+=1
+                                try:
+                                    for match in people_json[id]["matches"]:
+                                        if re.findall(match,name)!=[]:
+                                            Found=True
+                                            people_json[id]["metadata_frequency"]+=1
+                                except:
+                                    print("- * - * - Name matching failed\t",name)
+                                    return name
                             if Found==False:
                                 try:
                                     id=module.z0s(len(people_json.keys()),len(people_json.keys())+1)
                                     p={
-                                        "first":re.findall("^([\w\W]+)\s",name)[0],
-                                        "last":re.findall("\s([\w\W]+)$",name)[0],
+                                        "first": re.findall(r"^([\w\W]+)\s",name)[0],
+                                        "last": re.findall(r"\s([\w\W]+)$",name)[0],
                                         "matches":[name],
                                         "metadata_frequency":1                               
                                     }
@@ -197,7 +201,7 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,
 
 
         except Exception as e:
-            print("\t\t", bm_name," --BOOKMARK NOT COMPLETED *** ***")
+            print("- * - * - ", bm_name," --BOOKMARK NOT COMPLETED *** ***")
             print("\t\t",e,traceback.format_exc(),'\n')
             bms_notcomplete.append(bm_name)
         bms_complete.append(bm_name)            
@@ -279,13 +283,13 @@ def tag_duplicates(emails_json):
             #2: bookmark_length
             duplicate_bookmark_lengths=[]
             for id_duplicate in ids:
-                num1=int(re.findall("_([0-9]+)$",emails_json[id]["bookmark"])[0])
-                num2=int(re.findall("_([0-9]+)_",emails_json[id]["bookmark"])[0])
+                num1=int( re.findall(r"_([0-9]+)$",emails_json[id]["bookmark"])[0])
+                num2=int( re.findall(r"_([0-9]+)_",emails_json[id]["bookmark"])[0])
                 bookmark_num_pages=num1-num2+1
                 duplicate_bookmark_lengths.append(bookmark_num_pages)
             highest=sorted(duplicate_bookmark_lengths)[-1]
-            num1=int(re.findall("_([0-9]+)$",emails_json[id]["bookmark"])[0])
-            num2=int(re.findall("_([0-9]+)_",emails_json[id]["bookmark"])[0])
+            num1=int( re.findall(r"_([0-9]+)$",emails_json[id]["bookmark"])[0])
+            num2=int( re.findall(r"_([0-9]+)_",emails_json[id]["bookmark"])[0])
             bookmark_num_pages=num1-num2+1
             score2=0-(bookmark_num_pages/highest)
             #print(id,"     ",emails_json[id]["duplicate_in_shortest_bookmark"],"\r")
@@ -360,9 +364,9 @@ f.write(json.dumps(matches, indent=4))
 f.close()
 
 def clean_sql(text): #ß = '  ∆ = , ∂ = \n
-    text=re.sub("'","ß",text)
-    text=re.sub(",","∆",text)
-    text=re.sub("\n","∂",text)
+    text= re.sub(r"'","ß",text)
+    text= re.sub(r",","∆",text)
+    text= re.sub(r"\n","∂",text)
     return text
 
 split="', '"
