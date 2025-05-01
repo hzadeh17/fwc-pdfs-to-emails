@@ -7,7 +7,7 @@ def z0s(totalnum,subnum): # eg 4128, 34 .. will return 0034
     return zeros_subnum
 
 # INPUT
-bms_filenames_file=Path(pathlib.Path.cwd() / "make_bookmarks" / "output" / "bookmark_names.json")
+bms_filenames_file=Path(pathlib.Path.cwd() / "make_bookmarks" / "output_json" / "bookmark_names.json")
 bm_names = [bm_name.lower() for bm_name in list(json.load(open(bms_filenames_file, 'r')))]
 
 x={}
@@ -24,8 +24,8 @@ for bm_name in bm_names:
         else:
             x[bm_name].append(page_name)
 
-f=open(Path(pathlib.Path.cwd() / "make_bookmarks" / "output" /"bookmark_pages.json"),"w")
+f=open(Path(pathlib.Path.cwd() / "make_bookmarks" / "output_json" /"bookmark_pages.json"),"w")
 f.write(json.dumps(x, indent = 4))
 
-f=open(Path(pathlib.Path.cwd() / "make_bookmarks" /"output" /"page_names.json"),"w")
+f=open(Path(pathlib.Path.cwd() / "make_bookmarks" /"output_json" /"page_names.json"),"w")
 f.write(json.dumps(page_names, indent = 4))

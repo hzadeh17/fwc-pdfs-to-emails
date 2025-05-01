@@ -5,7 +5,7 @@ from pathlib import Path
 from urllib import request
 
 FILTER=""
-date="250422"
+date="250430"
 test=True
 
 if FILTER!="":
@@ -166,8 +166,8 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,
                                             Found=True
                                             people_json[id]["metadata_frequency"]+=1
                                 except:
-                                    print("- * - * - Name matching failed\t",name)
-                                    return name
+                                    #print("- * - * - Name matching failed\t",match,name)
+                                    pass
                             if Found==False:
                                 try:
                                     id=module.z0s(len(people_json.keys()),len(people_json.keys())+1)

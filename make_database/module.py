@@ -730,7 +730,7 @@ def LikeCanonName(name,people_json,n=0.85):
                         Found=True
                         return correctname[0]
         except:
-            print("- * - * - Name matching failed\t",name)
+            #print("- * - * - Name matching failed\t",name)
             return name
     if Found==False:
         return name
@@ -802,6 +802,9 @@ def fix_name(ogname,people_json,prt=0): # to clean list
             name=Caps(name)
         except KeyboardInterrupt:
             raise KeyboardInterrupt
+        except:
+            #print("- * - * - Name matching failed: ",name)
+            pass
 
     if ogname!=name and prt==1:
         print("Name fixed:\t",ogname," --> ",name)
