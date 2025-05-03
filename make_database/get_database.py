@@ -5,7 +5,7 @@ from pathlib import Path
 from urllib import request
 
 FILTER=""
-date="250430"
+date="250501"
 test=True
 
 if FILTER!="":
@@ -202,7 +202,7 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,
 
         except Exception as e:
             print("- * - * - ", bm_name," --BOOKMARK NOT COMPLETED *** ***")
-            print("\t\t",e,traceback.format_exc(),'\n')
+            #print("\t\t",e,traceback.format_exc(),'\n')
             bms_notcomplete.append(bm_name)
         bms_complete.append(bm_name)            
 
