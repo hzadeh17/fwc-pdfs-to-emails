@@ -186,7 +186,10 @@ def getBody(bm_text,header,time_limit,prt=False): # Returns body of email
             break
         email_text=re.findall(as_regex(header["header_text"])+(x*line),bm_text)[0]
         bm_end=re.findall(r"xxxEND_BOOKMARK:",email_text)
-        p("%s\n___New line %i added!\n"%(re.findall(r"\n.*$",email_text)[0],x),prt)
+        try:
+            p("%s\n___New line %i added!\n"%(re.findall(r".*$",email_text)[0],x),prt)
+        except:
+            print(header,email_text)
 
     if bm_end!=[]:
         p("\n___Ran into bookmark end; FIN!\n",prt)

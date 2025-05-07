@@ -4,8 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from urllib import request
 
-FILTER=""
-date="250501"
+FILTER="deq03_b286_0445_0867"
+date="250430"
 test=True
 
 if FILTER!="":
@@ -94,15 +94,15 @@ def get_emails(FILTER,bookmark_pages=Q.bookmark_pages,people_json=Q.people_json,
 
                 if header["metadata_order"]!=None:
                     # STEP 3: GET BODY TEXT OF BOOKMARK
-                    try:
-                        email_text,body_text,last_page=module.getBody(bm_text,header,45,prt)
-                    except:
-                        print("\t\t", bm_name, "\n",header," --HEADER BODY NOT OBTAINED *** ***")
-                        print("\t\t",e,traceback.format_exc(),'\n')
-                        bms_notcomplete.append(bm_name)
-                        email_text="BODYERROR"
-                        body_text="BODYERROR"
-                        last_page="PAGEERROR"
+                    #try:
+                    email_text,body_text,last_page=module.getBody(bm_text,header,45,prt)
+                    #except:
+                     #   print("\t\t", bm_name, "\n",header," --HEADER BODY NOT OBTAINED *** ***")
+                      #  print("\t\t",e,traceback.format_exc(),'\n')
+                       # bms_notcomplete.append(bm_name)
+                        #email_text="BODYERROR"
+                        #body_text="BODYERROR"
+                        #last_page="PAGEERROR"
 
                     
                     email={}
